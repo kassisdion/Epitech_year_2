@@ -1,0 +1,151 @@
+.TH malloc 3 "Version 1.0" "Fonctions des bibliothèques"
+
+.SH Nom
+malloc, calloc, free, realloc - Allocation et libération dynamiques de mémoire
+
+.SH Synopsis
+.nf
+.B LD_PRELOAD=./libmy_malloc.so <executable>
+.SP
+.BI "void *calloc (size_t nmemb, size_t  " "size")
+.BI "void *malloc (size_t " "size");"
+.BI "free (void " "*ptr");
+.BI "void *realloc (void " "*ptr", size_t " "size");
+.fi
+
+.SH Desciption
+.PP
+.BR calloc()
+alloue la mémoire nécessaire pour un tableau
+.I nmemb
+éléments, chacun d'eux représentant size octets, et renvoie un pointeur vers la mémoire allouée. Cette zone est remplie avec des zéros.
+
+.BR malloc()
+alloue 
+.I size
+octets, et renvoie un pointeur sur la mémoire allouée.
+Le contenu de 
+.IR "la zone de mémoire n'est pas initialisé."
+si
+.I size
+vaut 0, la fonction
+.BR malloc()
+retournera un pointeur valide.
+
+.BR free()
+libère l'espace mémoire pointé par 
+.IR ptr
+, qui a été obtenu lors d'un appel antérieur à
+.BR malloc()
+, 
+.BR calloc()
+ou
+.BR realloc()
+. Si le pointeur
+.IR ptr
+n'a pas été obtenu par l'un de ces appels, ou si il a déjà été libéré avec
+.BR free()
+, le comportement dépendra du fichier de config. Si 
+-IR ptr
+est NULL, le comportement dépendra également du fichier de config.
+
+.BR realloc()
+modifie la taille du bloc de mémoire pointé par
+.IR ptr
+pour l'amener à une taille de
+.IR size
+octets.
+.BR realloc()
+conserve le contenu de la zone mémoire minimum entre la nouvelle et l'ancienne taille.
+Le contenu de la zone de mémoire nouvellement allouée n'est pas initialisé.
+Si
+.IR ptr
+est NULL, l'appel de
+.BR realloc()
+est équivalent à
+.BR malloc(size).
+Si
+.IR size
+vaut zéro, l'appel est équivalent à
+.BR free(ptr).
+Si 
+.IR ptr
+n'est pas NULL, il doit avoir été obtenu par un appel antérieur à
+.BR malloc()
+,
+.BR calloc()
+ou
+.BR realloc(). 
+
+.SH Valeur Renvoyé
+
+Pour 
+.BR calloc()
+et 
+.BR "malloc()"
+, la valeur renvoyée est un pointeur sur la mémoire allouée,
+qui est correctement alignée pour n'importe quel type de variable,
+ou NULL si la demande échoue.
+
+.BR free() 
+ne renvoie pas de valeur.
+
+.BR realloc()
+renvoie un pointeur sur la mémoire nouvellement allouée,
+qui est correctement alignée pour n'importe quel type de variable,
+et qui peut être différent de ptr, ou NULL si la demande échoue, ou si size vaut zéro.
+Si realloc() échoue, le bloc mémoire original reste intact, il n'est ni libéré ni déplacé. 
+
+.SH "Fichier de configuration"
+.BR Fichier :
+ /etc/malloc.conf  est un fichier qui contient les flag de configuration de la librairie
+
+.BR "Flags D'affichage :"	 
+    EN (Error Nothing)          : n'affiche aucun message
+    ED (Error Debug)            : affichage les messages permetant de debug
+    EI (Error Info)             : affiche les messages informatifs
+    EW (Error Warning)          : affiche les warnings
+    EE (Error Error)            : affiche les erreurs
+    EA (Error All)              : affiche tout les messages
+    PA (Print allocated)        : affiche un message lors d'une allocation de mémoire
+    PU (Print Unallocated)      : affiche un message lors d'une libération de mémoire
+    PB (Print Block)            : affiche le nombre de block a chaque fois qu'il change
+    PM (Print Max)              : affiche le nombre max de block a la fin.
+
+.BR "Flag D'execution :"
+    AE (Abort Error)            : les erreurs causent un abort
+    LM ([Abort] Low Memory)     : génére un abort quand sbrk fail.
+
+.BR "Flag D'initialisation"
+    IB (Init block)             : init tout les block mémoire a 0.
+    
+.BR "Flag D'optimisation"
+    01 (Optimisation 1)         : Malloc utilisera l'algorithm "First_fit"
+    02 (Optimisation 2)         : Malloc utilisera l'algorithm "Best_fit"
+
+.SH Notes
+
+Le standard Unix98 réclame que 
+.BR malloc()
+,
+.BR calloc()
+, et
+.BR realloc() 
+positionne errno à ENOMEM en cas d'échec. La Glibc suppose qu'il en est ainsi (et les versions glibc de cette routine le font).
+Si vous utilisez une implémentation personnelle de malloc qui ne positionne pas errno,
+certaines routines de bibliothèques peuvent échouer sans donner de raison dans errno.
+
+Lorsqu'un programme se plante durant un appel à 
+.BR malloc()
+,
+.BR calloc()
+ou 
+.BR realloc()
+, ceci est presque toujours le signe d'une corruption du tas (zone de mémoire dans laquelle sont allouées les variables dynamiques).
+Ceci survient généralement en cas de débordement d'un bloc mémoire alloué, ou en libérant deux fois le même pointeur. 
+
+.SH Auteur
+.nf
+Faisant Florian <florian.faisant@epitech.eu>
+Hervier Guillaume <guillaume.hervier@epitech.eu>
+.fi
